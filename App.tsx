@@ -1,6 +1,6 @@
 import { NavigationContainer } from "@react-navigation/native";
 import { Routes } from "./navigation/Routes";
-import MainNavigation from "./navigation/mainNavigation";
+import MainNavigation from "./navigation/MainNavigation";
 
 const App = () => {
   return(

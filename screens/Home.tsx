@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ScrollView, Text, StyleSheet, TextInput,Pressable,View,Image,  useColorScheme, useWindowDimensions } from 'react-native';
+import { ScrollView, Text, StyleSheet, TextInput,Pressable,View,Image,  useColorScheme, useWindowDimensions ,Button} from 'react-native';
 import { Routes } from "../navigation/Routes";
 
 export default function Home({navigation}) {
@@ -71,6 +71,9 @@ export default function Home({navigation}) {
               <Pressable style={styles.pressButton} onPress={handleLogin}>
                 <Text style={styles.buttonText}>Log in</Text>
               </Pressable>
+              <Button
+                title="Go to Logged"
+                onPress={() => navigation.navigate('Logged')}/>
             </View>  
           </>
         )}
