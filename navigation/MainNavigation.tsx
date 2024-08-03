@@ -1,7 +1,10 @@
 import { createStackNavigator } from "@react-navigation/stack";
 import { Routes } from "./Routes";
-import Home from "../screens/Home";
+import Onboarding from "../screens/Onboarding";
 import Logged from "../screens/Logged";
+import { View, Text, Image, StyleSheet } from 'react-native';
+
+
 
 
 const Stack = createStackNavigator();
@@ -9,10 +12,17 @@ const Stack = createStackNavigator();
 const MainNavigation = () => {
     return(
         <Stack.Navigator>
-            <Stack.Screen name={Routes.Home} component={Home}/>
+            <Stack.Screen 
+            name={Routes.Onboarding} 
+            component={Onboarding}
+            options={{headerShown:false}}
+            />
             <Stack.Screen name={Routes.Logged} component={Logged}/>
         </Stack.Navigator>
     )
 };
+
+
+
 
 export default MainNavigation;
