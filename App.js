@@ -1,119 +1,141 @@
-import { NavigationContainer } from "@react-navigation/native";
-import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { useEffect, useMemo, useReducer } from "react";
-import { Alert } from "react-native";
-import { Onboarding } from "./screens/Onboarding";
-import { Profile } from "./screens/Profile";
-import SplashScreen from "./screens/SplashScreen";
-import { Home } from "./screens/Home";
-import { StatusBar } from "expo-status-bar";
+import * as React from 'react';
 
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
-import { AuthContext } from "./contexts/AuthContext";
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+
+import { AuthContext } from './context/AuthContext';
+
+import SplashScreen from './screens/Splash/SplashScreen';
+import OnboardingScreen from './screens/Onboarding/OnboardingScreen';
+import HomeScreen from './screens/Home/HomeScreen';
+import ProfileScreen from './screens/Profile/ProfileScreen';
 
 const Stack = createNativeStackNavigator();
 
-export default function App({ navigation }) {
-  const [state, dispatch] = useReducer(
+export default function App() {
+
+  // useReducer
+  const [state, dispatch] = React.useReducer(
     (prevState, action) => {
       switch (action.type) {
-        case "onboard":
+        case 'RESTORE_TOKEN':
           return {
             ...prevState,
+            userToken: action.token,
             isLoading: false,
-            isOnboardingCompleted: action.isOnboardingCompleted,
           };
+        case 'LOG_IN':
+          return {
+            ...prevState,
+            isLogout: false,
+            userToken: action.token,
+          };
+        case 'LOG_OUT':
+          return {
+            ...prevState,
+            isLogout: true,
+            userToken: null,
+          };
+        default:
+          return prevState;
       }
     },
     {
       isLoading: true,
-      isOnboardingCompleted: false,
+      isLogout: false,
+      userToken: null,
     }
   );
 
-  useEffect(() => {
-    (async () => {
-      let profileData = [];
+  // useEffect
+  React.useEffect(() => {
+    const bootstrapAsync = async () => {
+      let userToken;
       try {
-        const getProfile = await AsyncStorage.getItem("profile");
-        if (getProfile !== null) {
-          profileData = getProfile;
-        }
+        // Restore token stored in `SecureStore` or any other encrypted storage
+        userToken = await SecureStore.getItemAsync('userToken');
       } catch (e) {
-        console.error(e);
-      } finally {
-        if (Object.keys(profileData).length != 0) {
-          dispatch({ type: "onboard", isOnboardingCompleted: true });
-        } else {
-          dispatch({ type: "onboard", isOnboardingCompleted: false });
-        }
+        // Restoring token failed
       }
-    })();
+      dispatch({ type: 'RESTORE_TOKEN', token: userToken });
+    };
+    bootstrapAsync();
   }, []);
 
-  const authContext = useMemo(
+  // useMemo
+  const authContext = React.useMemo(
     () => ({
-      onboard: async (data) => {
-        try {
-          const jsonValue = JSON.stringify(data);
-          await AsyncStorage.setItem("profile", jsonValue);
-        } catch (e) {
-          console.error(e);
-        }
-
-        dispatch({ type: "onboard", isOnboardingCompleted: true });
+      LogIn: async (data) => {
+        dispatch({ type: 'LOG_IN', token: 'dummy-auth-token' }); // dummy token
       },
-      update: async (data) => {
-        try {
-          const jsonValue = JSON.stringify(data);
-          await AsyncStorage.setItem("profile", jsonValue);
-        } catch (e) {
-          console.error(e);
-        }
-
-        Alert.alert("Success", "Successfully saved changes!");
-      },
-      logout: async () => {
-        try {
-          await AsyncStorage.clear();
-        } catch (e) {
-          console.error(e);
-        }
-
-        dispatch({ type: "onboard", isOnboardingCompleted: false });
+      LogOut: () => dispatch({ type: 'LOG_OUT' }),
+      LogUp: async (data) => {
+        dispatch({ type: 'LOG_IN', token: 'dummy-auth-token' }); // dummy token
       },
     }),
     []
   );
 
-  if (state.isLoading) {
-    return <SplashScreen />;
-  }
-
   return (
+
     <AuthContext.Provider value={authContext}>
-      <StatusBar style="dark" />
-      <NavigationContainer>
-        <Stack.Navigator>
-          {state.isOnboardingCompleted ? (
-            <>
+
+      <SafeAreaProvider>
+
+        <NavigationContainer>
+
+          <Stack.Navigator>
+
+            {state.isLoading ? (
+
               <Stack.Screen
-                name="Home"
-                component={Home}
-                options={{ headerShown: false }}
+               name="Splash"
+               component={SplashScreen}
+               options={{
+                 headerShown: false,
+               }}
               />
-              <Stack.Screen name="Profile" component={Profile} />
-            </>
-          ) : (
-            <Stack.Screen
-              name="Onboarding"
-              component={Onboarding}
-              options={{ headerShown: false }}
-            />
-          )}
-        </Stack.Navigator>
-      </NavigationContainer>
+
+            ) : state.userToken == null ? (
+
+                <Stack.Screen
+                 name="Onboarding"
+                 component={OnboardingScreen}
+                 options={{
+                   headerShown: false,
+                 }}
+                />
+
+            ) : (
+
+              <>
+                <Stack.Screen
+                 name="Home"
+                 component={HomeScreen}
+                 options={{
+                   headerShown: false,
+                 }}
+                />
+                <Stack.Screen
+                 name="Profile"
+                 component={ProfileScreen}
+                 options={{
+                   headerShown: false,
+                 }}
+                />
+              </>
+
+            )}
+
+          </Stack.Navigator>
+
+        </NavigationContainer>
+
+      </SafeAreaProvider>
+
     </AuthContext.Provider>
+
   );
 }
